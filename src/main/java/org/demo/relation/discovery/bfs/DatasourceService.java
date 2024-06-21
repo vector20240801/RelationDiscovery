@@ -315,7 +315,7 @@ public class DatasourceService implements Serializable {
                 return "";
             }
         }
-        return StringUtils.join(valueSet, "$$TJE$$");
+        return StringUtils.join(valueSet, "$$VEC$$");
     }
 
     private Dataset<Row> convertToRow(Context context, String tableName,
