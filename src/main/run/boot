@@ -1,0 +1,113 @@
+#!/bin/sh
+
+CURRENT_PATH=`pwd`
+
+parse_log_path() {
+    logpath="/usr/local/bfs-logs"
+     echo $logpath
+}
+
+
+LOG_PATH=$(parse_log_path)
+DATASOURCE_PARAM="$2"
+vector_PARAM="$3"
+
+echo "=========================="
+		echo "DATASOURCE_PARAM: $DATASOURCE_PARAM"
+		echo "vector_PARAM: $vector_PARAM"
+		echo "LOG_PATH: $LOG_PATH"
+echo "=========================="
+
+if [[ ! -e $LOG_PATH ]];then
+	mkdir -p $LOG_PATH
+fi
+
+BOOT_JAR="${project.build.finalName}.jar"
+
+BOOT_ENV="pro"
+JAVA_OPTS=" -Xms1024m -Xmx1024m -XX:MaxMetaspaceSize=1025m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$CURRENT_PATH -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -Xloggc:$LOG_PATH/gc.log -XX:-OmitStackTraceInFastThrow -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=60 -XX:+CMSScavengeBeforeRemark -XX:+UseCMSCompactAtFullCollection"
+
+
+JAVA_OPTS="$JAVA_OPTS $SERVER_OPTS  -Dlog.home=$LOG_PATH"
+
+JAVA_OPTS="$JAVA_OPTS "
+
+psid=0
+checkpid() {
+	javaps=`jps -lv | grep "\-Dapp.home=$CURRENT_PATH" | grep $BOOT_JAR`
+
+	if [ -n "$javaps" ]; then
+		psid=`echo $javaps | awk '{print $1}'`
+	else
+		psid=0
+	fi
+}
+
+start() {
+	checkpid
+
+	if [ $psid -ne 0 ]; then
+		echo "=========================="
+		echo "Warn: $BOOT_JAR already started! (pid=$psid)"
+		echo "=========================="
+	else
+		echo "Starting $BOOT_JAR $CURRENT_PATH"
+	    echo "JAVA_OPTS=$JAVA_OPTS"
+	    echo "LOG_PATH=$LOG_PATH"
+		nohup java $JAVA_OPTS -jar $BOOT_JAR $DATASOURCE_PARAM $vector_PARAM > $LOG_PATH/app.log  &
+		echo "Start $BOOT_JAR finish"
+	fi
+}
+
+stop() {
+	checkpid
+
+	if [ $psid -ne 0 ]; then
+		echo "Stopping $BOOT_JAR"
+		kill -9 $psid
+		echo "Stop $BOOT_JAR finish"
+	else
+		echo "=========================="
+		echo "Warn: $BOOT_JAR is not running"
+		echo "=========================="
+	fi
+}
+
+dead() {
+	checkpid
+
+	if [ $psid -ne 0 ]; then
+		kill -9 $psid
+	fi
+}
+
+status() {
+	checkpid
+
+	if [ $psid -ne 0 ]; then
+		echo "$BOOT_JAR is running! (pid=$psid)"
+	else
+		echo "$BOOT_JAR is not running"
+	fi
+}
+
+
+
+case "$1" in
+	'start')
+		start
+		;;
+	'stop')
+		stop
+		;;
+	'dead')
+		dead
+		;;
+	'status')
+		status
+		;;
+	*)
+		echo "Usage: $0 {start|stop|dead|status}"
+		exit 1
+esac
+exit 0

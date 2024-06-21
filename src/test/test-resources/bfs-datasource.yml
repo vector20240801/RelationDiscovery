@@ -1,0 +1,45 @@
+!!com.vector.dacp.dp.bfs.ContextService.ConfigSet
+configs:
+  - # default
+    profile: default
+    loaderType: 'vector_CONNECTOR'
+    columnsetSize: 3
+    matchscore: 100
+    idColumnTag:
+      ? 'date'
+      ? 'tax'
+      ? 'total'
+      ? 'amount'
+      ? 'value'
+      ? 'day'
+      ? 'cost'
+      ? 'code'
+      ? 'time'
+      ? 'status'
+      ? 'desc'
+    sample_coount: 1000
+    matchScore: 1000
+    # The minimum unit is one millionth
+    matched_percent: 800000
+  - profile: test-local
+    loaderType: 'vector_CONNECTOR'
+    # To save computational resources, only record data where the number of columns in the column_set is less than or equal to 2
+    columnSetSize: 1
+    idColumnTag:
+      ? 'date'
+      ? 'tax'
+      ? 'total'
+      ? 'amount'
+      ? 'value'
+      ? 'day'
+      ? 'cost'
+      ? 'code'
+      ? 'time'
+      ? 'status'
+      ? 'desc'
+    sampleCount: 10
+    loaderWorkerCount: 8
+    matchScore: 2000
+    filters:
+      - filter: 'TrimFilter'
+        columnPattern: 'CITEM_UUID|citem_uuid'
